@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_pertemuan_7/pages/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
@@ -17,7 +18,7 @@ class _LoginState extends State<Login> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: const Text("Aplikasi Login", style: TextStyle(color: Colors.white),),
+        title: const Text("Aplikasi Login Toko Ayam", style: TextStyle(color: Colors.white),),
         centerTitle: true,
       ),
       body: Container(
@@ -83,7 +84,7 @@ class _LoginState extends State<Login> {
                 ),
               ],
             ),
-            SizedBox(height: 20,),
+            const SizedBox(height: 20,),
             Text(warning)
           ],
         ),
@@ -97,6 +98,7 @@ class _LoginState extends State<Login> {
     await prefs.setString("password",passwordController.text);
     setState(() {
       warning = "Anda berhasil masuk...";
+      Navigator.push(context, MaterialPageRoute(builder:(context) => const MainPage(),));
     });
   }
 
@@ -105,15 +107,11 @@ class _LoginState extends State<Login> {
     if(prefs.getString("username") == usernameController.text || prefs.getString("password") == passwordController.text){
       setState(() {
         warning = "Anda berhasil masuk...";
-        print(prefs.getString("username"));
       });
+      Navigator.push(context, MaterialPageRoute(builder:(context) => const MainPage(),));
     }else{
       setState(() {
         warning = "Tidak ada akun tersebut...";
-        print(prefs.getString("username"));
-        print(usernameController.text);
-        print(prefs.getString("password"));
-        print(passwordController.text);
       });
     }
   }
