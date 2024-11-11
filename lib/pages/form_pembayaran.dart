@@ -10,9 +10,9 @@ class FormPembayaran extends StatefulWidget {
 }
 
 class _FormPembayaranState extends State<FormPembayaran> {
-  TextEditingController controller = TextEditingController(), controllerAlamat = TextEditingController();
+  TextEditingController controller = TextEditingController(text: "0"), controllerAlamat = TextEditingController();
   String warning = "";
-  late int kembalian = int.parse(controller.text)-widget.cost;
+  late int kembalian;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,6 +40,25 @@ class _FormPembayaranState extends State<FormPembayaran> {
               child: TextField(
                 controller: TextEditingController(text: widget.cost.toString()),
                 readOnly: true,
+                decoration: const InputDecoration(
+                  counterText: "",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(color: Colors.indigo, width: 3)
+                  )
+                )
+              ),
+            ),
+            const SizedBox(height: 20,),
+            const Text("Uang yang dibayarkan : "),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.indigo, width: 2)
+              ),
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   counterText: "",
                   border: OutlineInputBorder(
@@ -91,6 +110,7 @@ class _FormPembayaranState extends State<FormPembayaran> {
   void bayar(){
     if(widget.cost<=int.parse(controller.text)){
       setState(() {
+        kembalian = int.parse(controller.text)-widget.cost;
         warning = "Transaksi berhasil. Barang akan dikirim ke ${controllerAlamat.text}";
       });
     }else{

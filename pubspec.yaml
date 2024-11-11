@@ -37,12 +37,14 @@ dependencies:
   cupertino_icons: ^1.0.6
   shared_preferences: ^2.3.2
   flutter_native_splash: ^2.4.2
+  flutter_launcher_icons: ^0.14.1
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 
-flutter_native_splash:
-  color: "#ffffff"
-  image: assets/splash.png
+flutter_launcher_icons:
   android: true
   ios: true
+  image_path: "assets/splash_icon.png"
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +72,7 @@ flutter:
   assets:
     - assets/
     - assets/products/
+    - assets/splash_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
