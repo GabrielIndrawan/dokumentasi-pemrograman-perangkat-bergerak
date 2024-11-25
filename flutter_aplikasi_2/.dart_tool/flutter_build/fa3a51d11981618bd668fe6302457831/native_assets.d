@@ -1,0 +1,1 @@
+ D:\\latihan\ flutter\\flutter_aplikasi_2\\.dart_tool\\flutter_build\\fa3a51d11981618bd668fe6302457831\\native_assets.yaml: 
