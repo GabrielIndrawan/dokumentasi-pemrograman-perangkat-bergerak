@@ -1,12 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/produk.dart';
 import 'package:flutter_application_1/pages/edit_profile.dart';
 import 'package:flutter_application_1/pages/form_pembayaran.dart';
+import 'package:flutter_application_1/pages/history_page.dart';
 import 'package:flutter_application_1/pages/maps.dart';
 import 'package:flutter_application_1/pages/sms.dart';
 import 'package:flutter_application_1/pages/telpon.dart';
 import 'package:flutter_application_1/widgets/desc_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -16,8 +20,10 @@ class DashBoard extends StatefulWidget {
 }
 
 class _DashBoardState extends State<DashBoard> {
+  String user="";
   late SharedPreferences prefs;
   int total = 0;
+  List<String> produkDibeli = [];
   late List<double> opa = List.filled(products.length, 1);
   List<Product> products= [
     Product(nama: "Blangkon Yogyakarta", deskripsi: "Bentuk blangkon dengan gaya Yogyakarta memiliki ciri yang mudah ditebak yaitu apabila di bagian belakang terdapat mondolan. Mondolan merupakan istilah yang digunakan untuk menyebut tonjolan yang ada di belakang blangkon. Mondolan itu berbentuk bulatan yang berisi kain dan menonjol sebesar telur, nah berarti itu adalah ciri blangkon model Jogja. Untuk blangkon model ini biasanya dikenakan oleh para bangsawan keraton di wilayah Yogyakarta. Sekarang juga banyak para pengrajin blangkon jogja yang memproduksi untuk dapat dijual atau bisa digunakan sebagai Souvenir perusahaan eksklusif.", harga: 10000, gambar: "assets/products/blangkon-yogyakarta.jpg"),
@@ -28,10 +34,33 @@ class _DashBoardState extends State<DashBoard> {
     Product(nama: "Blangkon Pacul Guwung Sidoarjo", deskripsi: "Blangkon Pacul Gowang dengan nama unik adalah penutup kepala khas Sidoarjo. Secara bentuk, Blangkon Pacul Gowang ini lebih condong ke arah model udheng dari Madura. Hanya saja, punya ciri khas yakni penutup rambut atau kepala bagian atas yang hanya menutupi setengah dan memiliki lubang. Karena itu, blangkon ini dimakan pacul gowang karena bentuk atasnya yang mirip dengan pacul atau cangkul yang sudah berlubang. Blangkon Pacul Gowang ini juga memiliki warna yang cenderung mencolok seperti merah, hijau, hingga kuning. Dengan variasi corak batik khas Sidoarjo yakni batik beras utah kembang bayeng rawan wungu dan bunga kenanga.", harga: 20000, gambar: "assets/products/blangkon-pacul-gowang-sidoarjo.jpg"),
   ];
 
+  Future fetchProduct() async {
+    try{
+      var result = await http.get(Uri.parse("http://localhost/server_uas_flutter/fetchProduct.php"));
+      if (result.statusCode == 200) {
+      // If successful, parse the JSON
+
+      final data = jsonDecode(result.body);
+      setState(() {
+        products = data;
+      });
+      print(products);
+    } else {
+      // If the result is not successful, handle the error
+      print('Request failed with status: ${result.statusCode}');
+      print('result body: ${result.body}');
+    }
+  } catch (e) {
+    // Catch any other errors, e.g., network issues
+    print('Error: $e');
+  }
+  }
+
   @override
   void initState() {
     super.initState();
     initSharedPrefs();
+    fetchProduct();
   }
     
   @override
@@ -46,6 +75,10 @@ class _DashBoardState extends State<DashBoard> {
           IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => const Telephone()));}, icon: const Icon(Icons.sms, color: Colors.white, size: 15)),
           IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => const Maps()));}, icon: const Icon(Icons.map, color: Colors.white, size: 15)),
           IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfile()));}, icon: const Icon(Icons.account_box, color: Colors.white, size: 15)),
+          FutureBuilder(
+            future: initSharedPrefs(),
+            builder:(context,snapshot) => IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage(user)));}, icon: const Icon(Icons.history, color: Colors.white, size: 15)),
+          ),
         ],
         leading: Center(
           child: IconButton(onPressed: () {Navigator.of(context).pop();}, icon: const Icon(Icons.arrow_back, color: Colors.white,)),
@@ -57,7 +90,7 @@ class _DashBoardState extends State<DashBoard> {
             future: initSharedPrefs(),
             builder:(context,snapshot) => Container(
               margin: const EdgeInsets.symmetric(vertical: 20,horizontal: 10),
-              child: Text("Halo ! ${prefs.getString("username")}",style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 20),),
+              child: Text("Halo ! ${user}}",style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 20),),
             ),
           ),
           SizedBox(
@@ -102,6 +135,7 @@ class _DashBoardState extends State<DashBoard> {
                             onTap: (){
                               setState(() {
                                 total += products[index].harga;
+                                produkDibeli.add(products[index].nama);
                               });
                             },
                             child: Opacity(
@@ -139,7 +173,7 @@ class _DashBoardState extends State<DashBoard> {
         height: 60,
         child: Center(
           child: GestureDetector(
-            onTap: () {Navigator.push(context, MaterialPageRoute(builder:(context) => FormPembayaran(cost: total,)));},
+            onTap: () {Navigator.push(context, MaterialPageRoute(builder:(context) => FormPembayaran(cost: total,barangDibeli: produkDibeli,)));},
             child: Text("Total : $total", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 25),)
           ),
         ),
@@ -149,5 +183,8 @@ class _DashBoardState extends State<DashBoard> {
 
   Future<void> initSharedPrefs() async {
     prefs = await SharedPreferences.getInstance();
+    setState(() {
+      user = prefs.getString("username") ?? "";
+    });
   }
 }

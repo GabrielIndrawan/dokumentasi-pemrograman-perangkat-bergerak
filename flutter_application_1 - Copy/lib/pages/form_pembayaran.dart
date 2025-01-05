@@ -93,6 +93,8 @@ class _FormPembayaranState extends State<FormPembayaran> {
                 child: const Text("Bayar", style: TextStyle(color: Colors.indigo),)
               ),
             ),
+            const SizedBox(height: 20,),
+            
             Container(
               padding: const EdgeInsets.only(top: 5),
               child: Text("Kembalian : ${(kembalian<0)?"0":kembalian.toString()}", style: const TextStyle(color: Colors.indigo),),

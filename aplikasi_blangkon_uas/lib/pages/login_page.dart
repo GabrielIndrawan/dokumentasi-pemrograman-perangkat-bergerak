@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/admin_dashboard.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,11 +19,14 @@ class _LoginPageState extends State<LoginPage> {
   List<dynamic> users = [];
   Future<void> fetchUsers() async {
   try{
-      var result = await http.get(Uri.parse("localhost/database/database_connection.php"));
+      var result = await http.get(Uri.parse("http://localhost/server_uas_flutter/connection.php"));
       if (result.statusCode == 200) {
       // If successful, parse the JSON
       final data = jsonDecode(result.body);
-      print(data);
+      setState(() {
+        users = data;
+      });
+      print(users);
     } else {
       // If the result is not successful, handle the error
       print('Request failed with status: ${result.statusCode}');
@@ -33,6 +37,36 @@ class _LoginPageState extends State<LoginPage> {
     print('Error: $e');
   }
   }
+
+  Future<void> addUser(String username, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse("http://localhost/server_uas_flutter/addUser.php"),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'username': username,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const DashBoard()));
+      } else {
+        // Handle error
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to add user: ${response.body}'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      // Handle network error
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error: $e'),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
   String warning = "";
 
   @override
@@ -100,13 +134,13 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 ElevatedButton(
                   onPressed: (){
-                    setFromSharedPreferences();
+                    getFromSharedPreferences();
                   }, 
                   child: const Text("Create User")
                 ),
                 ElevatedButton(
                   onPressed: (){
-                    getFromSharedPreferences();
+                    setFromSharedPreferences();
                   }, 
                   child: const Text("Login")
                 ),
@@ -120,31 +154,28 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void setFromSharedPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance(); 
-    if(usernameController.text == prefs.getString("username") && passwordController.text == prefs.getString("password")){
-      setState(() {
-        warning = "Akun tersebut telah dibuat sebelumnya, jika itu anda bisa langsung klik login...";
-      });
+  void setFromSharedPreferences(){
+    if(usernameController.text == "admin" && passwordController.text == "123"){
+      Navigator.push(context, MaterialPageRoute(builder: (context) => AdminDashboard()));
     }else{
-      await prefs.setString("username",usernameController.text);
-      await prefs.setString("password",passwordController.text);
-      if(mounted){
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const DashBoard()));
-      }
-    }  
+      users.forEach((user) async {
+        if(usernameController.text == user["username"] && passwordController.text == user["password"]){
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString("username",usernameController.text);
+          await prefs.setString("password",passwordController.text);
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const DashBoard()));
+        }
+      });
+      setState(() {
+          warning = "Akun tersebut tidak ditemukan...";
+      });
+    }
   }
 
   void getFromSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    if(prefs.getString("username") == usernameController.text && prefs.getString("password") == passwordController.text){
-      if(mounted){
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const DashBoard()));
-      }
-    }else{
-      setState(() {
-        warning = "Tidak ada akun tersebut...";
-      });
-    }
+    await prefs.setString("username",usernameController.text);
+    await prefs.setString("password",passwordController.text);
+    addUser(usernameController.text, passwordController.text);
   }
 }
