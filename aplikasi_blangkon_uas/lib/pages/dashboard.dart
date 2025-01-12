@@ -25,7 +25,7 @@ class _DashBoardState extends State<DashBoard> {
   int total = 0;
   List<String> produkDibeli = [];
   late List<double> opa = List.filled(products.length, 1);
-  List<Product> products= [
+  List<dynamic> products= [
     Product(nama: "Blangkon Yogyakarta", deskripsi: "Bentuk blangkon dengan gaya Yogyakarta memiliki ciri yang mudah ditebak yaitu apabila di bagian belakang terdapat mondolan. Mondolan merupakan istilah yang digunakan untuk menyebut tonjolan yang ada di belakang blangkon. Mondolan itu berbentuk bulatan yang berisi kain dan menonjol sebesar telur, nah berarti itu adalah ciri blangkon model Jogja. Untuk blangkon model ini biasanya dikenakan oleh para bangsawan keraton di wilayah Yogyakarta. Sekarang juga banyak para pengrajin blangkon jogja yang memproduksi untuk dapat dijual atau bisa digunakan sebagai Souvenir perusahaan eksklusif.", harga: 10000, gambar: "assets/products/blangkon-yogyakarta.jpg"),
     Product(nama: "Blangkon Solo", deskripsi: "Blangkon Solo dikenal mulai Pakubuwono III, setelah terjadinya Perjanjian Giyanti. Sebelumnya, blangkon Solo memiliki bentuk seperti blangkon Yogyakarta, salah satunya memiliki ciri mondolan. Jika, Yogyakarta hanya memiliki 1 model blangkon, Solo memiliki 6 model blangkon. Batik yang digunakan untuk blangkon Solo ada beberapa jenis, yaitu motif Solo muda atau motif keprabon, motif kesatrian, motif perbawan, motif dines, maupun motif tempen", harga: 20000, gambar: "assets/products/blangkon-solo.jpg"),
     Product(nama: "Blangkon Banyumasan", deskripsi: "Ciri khas utama belangkon ini adalah motifnya menyerupai batik Pekalongan yang eksotis. Secara garis besar, belangkon Banyumasan terbagi lagi menjadi dua model, yaitu wiriatmajan dan ginoan. Kedua jenis belangkon ini biasa dipakai masyarakat pada acara formal. Namun, masyarakat yang mencari belangkon Banyumasan yang lebih kasual dapat memilih model seodirmanan.", harga: 10000, gambar: "assets/products/blangkon-banyumasan.jpg"),
@@ -36,7 +36,7 @@ class _DashBoardState extends State<DashBoard> {
 
   Future fetchProduct() async {
     try{
-      var result = await http.get(Uri.parse("http://localhost/server_uas_flutter/fetchProduct.php"));
+      var result = await http.get(Uri.parse("http://Abelepic3.infinityfreeapp.com/server_uas_flutter/fetchProduct.php"));
       if (result.statusCode == 200) {
       // If successful, parse the JSON
 
@@ -81,7 +81,9 @@ class _DashBoardState extends State<DashBoard> {
           ),
         ],
         leading: Center(
-          child: IconButton(onPressed: () {Navigator.of(context).pop();}, icon: const Icon(Icons.arrow_back, color: Colors.white,)),
+          child: IconButton(onPressed: () {
+            Navigator.of(context).pop();
+            }, icon: const Icon(Icons.arrow_back, color: Colors.white,)),
         ),
       ),
       body: Column(
@@ -90,7 +92,7 @@ class _DashBoardState extends State<DashBoard> {
             future: initSharedPrefs(),
             builder:(context,snapshot) => Container(
               margin: const EdgeInsets.symmetric(vertical: 20,horizontal: 10),
-              child: Text("Halo ! ${user}}",style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 20),),
+              child: Text("Halo ! ${user}",style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 20),),
             ),
           ),
           SizedBox(
@@ -113,10 +115,10 @@ class _DashBoardState extends State<DashBoard> {
                           child: GestureDetector(
                             onTap: (){
                               showDialog(context: context, builder: (context) {
-                                return DescDialog(title: products[index].nama,image: products[index].gambar,description: products[index].deskripsi);
+                                return DescDialog(title: products[index]["nama"],image: products[index]["gambar"],description: products[index]["deskripsi"]);
                               });
                             },
-                            child: Text(products[index].nama, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15,),textAlign: TextAlign.center,)
+                            child: Text(products[index]["nama"], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15,),textAlign: TextAlign.center,)
                           )
                         ),
                         SizedBox(
@@ -134,8 +136,8 @@ class _DashBoardState extends State<DashBoard> {
                             },
                             onTap: (){
                               setState(() {
-                                total += products[index].harga;
-                                produkDibeli.add(products[index].nama);
+                                total += int.parse(products[index]["harga"]);
+                                produkDibeli.add(products[index]["nama"]);
                               });
                             },
                             child: Opacity(
@@ -149,7 +151,7 @@ class _DashBoardState extends State<DashBoard> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(17.5),
-                                  child: Image.asset(products[index].gambar,width: 120, fit: BoxFit.fill,)
+                                  child: Image.asset(products[index]["gambar"],width: 120, fit: BoxFit.fill,)
                                 ),
                               ),
                             ),
@@ -157,7 +159,7 @@ class _DashBoardState extends State<DashBoard> {
                         ),
                         Container(
                           margin: const EdgeInsets.symmetric(vertical: 5),
-                          child: Text("Harga : ${products[index].harga}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15))
+                          child: Text("Harga : ${products[index]["harga"]}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15))
                         )
                       ],
                     ),

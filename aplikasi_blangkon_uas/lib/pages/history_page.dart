@@ -22,9 +22,10 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   fetchData() async {
-    String url = 'http://localhost/server-uas-flutter/history.php'; // Replace with real API
+    String url = 'http://Abelepic3.infinityfreeapp.com/server_uas_flutter/history.php'; // Replace with real API
 
-    final response = await http.post(Uri.parse(url),headers: {'Content-Type': 'application/json'},
+    final response = await http.post(Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'pelanggan': widget.user,
         }));
@@ -54,7 +55,7 @@ class _HistoryPageState extends State<HistoryPage> {
             child: ListTile(
               leading: Text(getTitle(index)),
               title: Text(getSubtitle(index)),
-              subtitle: Text(data[index]["barang"].join(",")),
+              subtitle: Text(data[index]["barang"]),
             ),
           );
         },

@@ -1,10 +1,14 @@
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/model_kota.dart';
 import 'package:dropdown_search/dropdown_search.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FormPembayaran extends StatefulWidget {
   final int cost;
@@ -13,6 +17,7 @@ class FormPembayaran extends StatefulWidget {
   var strKotaAsal = "398";
   var strKotaTujuan;
   var strEkspedisi = "jne";
+  File? imageFile;
   FormPembayaran({super.key,required this.cost, required this.barangDibeli});
 
   @override
@@ -23,7 +28,22 @@ class _FormPembayaranState extends State<FormPembayaran> {
   TextEditingController controller = TextEditingController(text: "0");
   String warning = "";
   int kembalian = 0;
+  String fileName = "";
   var ongkos;
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      print(widget.barangDibeli);
+      print(pickedFile.path);
+      setState(() {
+        widget.imageFile = File(pickedFile.path);
+        fileName = pickedFile.name;
+      });
+    }
+  }
+
   Future getData() async {
     try {
       final response = await http.post(
@@ -72,24 +92,40 @@ class _FormPembayaranState extends State<FormPembayaran> {
     }
   }
 
-  Future addData() async {
+  Future addData(File? imageFile) async {
+    var prefs = await SharedPreferences.getInstance();
+    String user = prefs.getString("username") ?? "";
     try {
-      final response = await http.post(
-        Uri.parse(
-          "http://localhost/server_uas_flutter/addSells.php",
-        ),
-        body: {
-          "barang": widget.barangDibeli,
-          "biaya": widget.cost,
-        },
-      ).then((value) {
-        var data = jsonDecode(value.body);
-        setState(() {
-          ongkos = data['rajaongkir']['results'][0]['costs'];
-        });
-      });
+      // Create multipart request
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("http://Abelepic3.infinityfreeapp.com/server_uas_flutter/addSells.php"),
+      );
+
+      // Add text fields to the request
+      request.fields['pembeli'] = user;
+      request.fields['barang'] = widget.barangDibeli.join(",");
+      request.fields['biaya'] = widget.cost.toString();
+
+      // Add the image file to the request
+      if (imageFile != null && await imageFile.exists()) {
+        print("test...");
+        request.files.add(await http.MultipartFile.fromPath('image', widget.imageFile!.path, contentType: MediaType('image', 'jpeg')));
+      }
+      // Send the request
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+
+      // Handle response
+      if (response.statusCode == 200) {
+        print("Response: ${jsonDecode(responseBody)}");
+      } else {
+        final mimeType = lookupMimeType(widget.imageFile!.path);
+        print("File MIME type: $mimeType");
+        print("Error: ${responseBody}");
+      }
     } catch (e) {
-      print(e);
+      print("Error: $e");
     }
   }
 
@@ -99,7 +135,9 @@ class _FormPembayaranState extends State<FormPembayaran> {
       appBar: AppBar(
         leading: Center(
           child: IconButton(
-            onPressed: () {Navigator.pop(context);},
+            onPressed: () {
+              Navigator.pop(context);
+              },
             icon: const Icon(Icons.arrow_back, color: Colors.white,)
           ),
         ),
@@ -183,25 +221,18 @@ class _FormPembayaranState extends State<FormPembayaran> {
                 child: const Text("Bayar", style: TextStyle(color: Colors.indigo),)
               ),
             ),
+            const SizedBox(height: 10),
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles();
-
-                  if (result != null) {
-                    // File details
-                    String fileName = result.files.single.name;
-                    String? filePath = result.files.single.path;
-
-                    print("File Name: $fileName");
-                    print("File Path: $filePath");
-                  } else {
-                    // User canceled the picker
-                    print("No file selected.");
-                  }
+                  _pickImage();
                 },
-                child: Text("Pick a File"),
+                child: const Text("Pick an Image"),
               ),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: Text(fileName),
             ),
             Container(
               padding: const EdgeInsets.only(top: 5),
@@ -224,9 +255,9 @@ class _FormPembayaranState extends State<FormPembayaran> {
   void bayar()async{
     if(widget.cost<=int.parse(controller.text)){
       await getData();
-      addData();
+      await addData(widget.imageFile);
       setState(() {
-        kembalian = int.parse(controller.text)-widget.cost;
+        kembalian = int.parse(controller.text)-(widget.cost + ongkos[1]['cost'][0]['value'] as int);
         warning = "Transaksi berhasil. Nota telah dibuat";
       });
     }else{

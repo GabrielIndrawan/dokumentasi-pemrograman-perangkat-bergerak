@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -37,6 +41,7 @@ class AdminDashboard extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Logging out...')),
           );
+          Navigator.of(context).pop();
         } else {
           Navigator.push(
             context,
@@ -77,20 +82,25 @@ class _ListPageState extends State<ListPage> {
     fetchData();
   }
 
+  String convertToCSV(List<List<dynamic>> data){
+    String csvData = const ListToCsvConverter().convert(data);
+    return csvData;
+  }
+
   fetchData() async {
     String url = '';
     switch (widget.listType) {
       case 'User List':
-        url = 'http://localhost/server-uas-flutter/connection.php';
+        url = 'http://Abelepic3.infinityfreeapp.com/server_uas_flutter/connection.php';
         break;
       case 'Product List':
-        url = 'http://localhost/server-uas-flutter/fetchProduct.php'; // Example URL
+        url = 'http://Abelepic3.infinityfreeapp.com/server_uas_flutter/fetchProduct.php'; // Example URL
         break;
       case 'Customer List':
-        url = 'http://localhost/server-uas-flutter/customers.php'; // Replace with real API
+        url = 'http://Abelepic3.infinityfreeapp.com/server_uas_flutter/customers.php'; // Replace with real API
         break;
       case 'Sells List/Details':
-        url = 'http://localhost/server-uas-flutter/sells.php'; // Replace with real API
+        url = 'http://Abelepic3.infinityfreeapp.com/server_uas_flutter/sells.php'; // Replace with real API
         break;
     }
 
@@ -105,6 +115,35 @@ class _ListPageState extends State<ListPage> {
     }
   }
 
+  Future<void> downloadCSV(String csvData) async {
+    final directory = await getExternalStorageDirectory();
+    final filePath = directory!.path + "/data.csv";
+    File file = File(filePath);
+    await file.writeAsString(csvData);
+    print("CSV saved at: ${filePath}");
+  }
+
+  void generateAndSaveCSV() {
+    // Assuming `data` is a list of maps, convert it to List<List<dynamic>>
+    List<List<dynamic>> csvData = [];
+    
+    // Add headers if needed
+    if (data.isNotEmpty) {
+      List<dynamic> headers = data[0].keys.toList(); // Extract headers from the first object
+      csvData.add(headers);
+
+      // Add data rows
+      for (var row in data) {
+        List<dynamic> rowData = row.values.toList();
+        csvData.add(rowData);
+      }
+    }
+
+    // Convert and save to CSV
+    String csv = convertToCSV(csvData);
+    downloadCSV(csv);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,42 +152,60 @@ class _ListPageState extends State<ListPage> {
         title: Text(widget.listType, style: const TextStyle(color: Colors.white)),
         automaticallyImplyLeading: true,
       ),
-      body: ListView.builder(
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          return Card(
-            margin: EdgeInsets.all(10),
-            child: ListTile(
-              title: Text(getTitle(index)),
-              subtitle: Text(getSubtitle(index)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Editing item ${index + 1}')),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        data.removeAt(index);
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Deleted item ${index + 1}')),
-                      );
-                    },
-                  ),
-                ],
+      body:
+          Column(
+            children: [
+              ElevatedButton(onPressed: (){
+                generateAndSaveCSV();
+              }, child: const Text("Download CSV")),
+              Container(
+                height: 400,
+                child: ListView.builder(
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      margin: EdgeInsets.all(10),
+                      child: ListTile(
+                        title: Text(getTitle(index)),
+                        subtitle: Text(getSubtitle(index)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              child:(widget.listType=="Sells List/Details")?
+                              Image.network("http://192.168.100.67/server_uas_flutter/"+data[index]["bukti"])
+                              :
+                              const SizedBox(),
+                            )
+                            ,
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Editing item ${index + 1}')),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  data.removeAt(index);
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Deleted item ${index + 1}')),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          );
-        },
-      ),
+            ],
+          ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(

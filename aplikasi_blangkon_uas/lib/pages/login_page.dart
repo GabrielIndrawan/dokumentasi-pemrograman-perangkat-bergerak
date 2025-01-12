@@ -19,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   List<dynamic> users = [];
   Future<void> fetchUsers() async {
   try{
-      var result = await http.get(Uri.parse("http://localhost/server_uas_flutter/connection.php"));
+      var result = await http.get(Uri.parse("http://Abelepic3.infinityfreeapp.com/server_uas_flutter/connection.php"));
       if (result.statusCode == 200) {
       // If successful, parse the JSON
       final data = jsonDecode(result.body);
@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> addUser(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse("http://localhost/server_uas_flutter/addUser.php"),
+        Uri.parse("http://Abelepic3.infinityfreeapp.com/server_uas_flutter/addUser.php"),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'username': username,
